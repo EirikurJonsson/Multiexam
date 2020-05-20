@@ -17,7 +17,7 @@ nms <- subset(tbl, target == 0)
 # Multiple-sclerosis (MS) group data
 ms <- subset(tbl, target == 1)
 
-#DISCRIPTIVE STATISTICS
+###################DISCRIPTIVE STATISTICS#########################
 
 descriptive <- function(x){
   "
@@ -62,93 +62,6 @@ descriptive <- function(x){
   mylist = list("meanVector" = xmean, "Covariance" = xcov, "Co-Variance" = xcovVar, "Variance" = xvar, "CovInverse" = xcovInv, "Determinant" = xdet)
   return(mylist)
 }
-
-####################################################################################################################
-#DISCRIPTIVE STATISTICS FOR NMS GROUP:
-descriptive(nms[1:5])
-
-#DISCRIPTIVE STATISTICS FOR MS GROUP:
-descriptive(ms[1:5])
-
-############MEAN VECTORS
-#Age
-#According to the mean vectors for NMS and MS, respectively, it is evident that the mean age for the NMS group is lower than for the MS group.
-
-#Mean V2 vs V4
-#The NMS group generally has a lower response time to stimuli than the MS group.
-#Mean V3 vs V5
-#The difference between the left- and the right eye is suggestively larger in the MS group compared to the NMS group.
-
-############COVARIANCE MATRIX
-#If two quantities have a positive covariance, they increase/decrease together.
-#If both variables tend to increase or decrease together, the coefficient is positive. If one variable tends to increase as the other decreases, the coefficient is negative.
-#Finally, the differences between L and R are significantly higher in the MS group compared to the NMS group.
-
-############VARIANCE MATRIX
-#Variance measures how far a set of data is spread out. A variance of zero indicates that all the data values are identical. All non-zero variances are positive. A small variance indicates that the data points tend to be very close to the mean and to each other.
-
-#For V2 and V4
-#For the NMS group, the variance between V2 and V4 is low compared to the MS group. 
-
-#For V3 and V5
-#For the NMS group the density is high between V3 and V5 with a value of 0.50. In contrast the variance for V3 and V5 is high which indicates a widespread. 
-
-####################################################################################################################
-
-# qq norm calculates the univariate normlity of the different variables
-# if the values lie along a straight line, the data follows a normal distribution with some mean and variance
-#In these cases we see, that near the two extemes, the points deviate from the straight line, indicating that the assumption of normality may not be valid
-#deviations from the straight line might indicate: heavier tails, skewness, outliers, and/or clustered data
-#QQ1 is not normally distributes since the data deviates from the straight line
-qqnorm(tbl[,1])
-qqline(tbl[,1])
-##QQ2 is not normally distributed 
-qqnorm(tbl[,2])
-qqline(tbl[,2])
-##QQ3 not normally distributed
-qqnorm(tbl[,3])
-qqline(tbl[,3])
-#QQ4 not normal
-qqnorm(tbl[,4])
-qqline(tbl[,4])
-##QQ5 not normal
-qqnorm(tbl[,5])
-qqline(tbl[,5])
-
-########################################################################################
-
-#although univariate normality does not imply multivariate normality if any single variable fails to follow normality we cannot have joint multivariate normality
-#For multivariate normality, both p-values of skewness and kurtosis statistics should be greater than 0.05
-
-# WE NEED TO APPLY THIS FUNCTION TO OUR DATA IN ORDER TO DETERMINE, IF THE DATA IS MULTIVARIATE NORMALLY DISTRIBUTED
-# THIS IS CHRISTIANS CODE FROM EXERCISE 4.26, I HAVE TRIED TO APPLY OUR DATA - IT COULD BE AWESOME THOUGH TO GET A QQLINE - I MANAGED TO GET ONE, BUT I WAS NOT ENTIRELY SURE, IF IT WAS CORRECT - SO I DELETED IT.
-# Exercise 4.26
-v <- as.matrix(tbl[,1:5])
-v.mean <- as.vector(colMeans(v))
-S <- cov(v)
-n <- nrow(v)
-D2 <- rep(0, n)
-for (i in 1:n) {
-  D2[i] <- t(v[i,] - v.mean) %*% solve(S) %*% (v[i,] - v.mean)
-}
-round(D2, 4)
-which(D2 < qchisq(0.5, 2))
-p <- ncol(v)
-D2 <- mahalanobis(v, colMeans(v), S)
-qqplot(qchisq(ppoints(n, a = 0.5), df = p), D2,
-       ylab = "Mahalanobis distances",
-       xlab = bquote("Quantiles of " ~ chi[.(p)]^2),
-       main = bquote("Q-Q plot of Mahalanobis" * ~ D^2 * 
-                       " vs. quantiles of" * ~ chi[.(p)]^2))
-
-#####################################################################################################################
-
-#A confidence region is a multi-dimensional generalization of a confidence interval (an interval for an individual variable).
-#It is a set of point in a n-dimensional space, often represented as an ellipsoid around a point (which is an estimated solution to a problem). 
-#To determine whether any mu0 lies within the confidence region (aka, is a possible value for mu),we need to compute the generalized squared distance and
-#compare it with the F distribution. If the squared distance is larger than the F distribution, then mu0 is NOT in the confidence region.
-#Since this is analogous to testing H0: mu = mu0 vs. H1: mu IS NOT EQUAL TO mu0, we see that the confidence region consists of all mu0 vectors for which the T^2 test
-#would NOT reject H0 in favor of H1 at significance level, alpha. 
 
 
 confRegionE <- function(x, f){
@@ -245,38 +158,8 @@ tsqared <- function(x,y,f){
   return(c(result, fstat))
 }
 
-#########################################################################################################
 
-
-# Plot section
-
-## Boxplot section
-
-### Non MS
-boxplot(tbl$V2[tbl$target == 0])
-boxplot(tbl$V3[tbl$target == 0])
-boxplot(tbl$V4[tbl$target == 0])
-boxplot(tbl$V5[tbl$target == 0])
-
-### MS
-
-boxplot(tbl$V2[tbl$target == 1])
-boxplot(tbl$V3[tbl$target == 1])
-boxplot(tbl$V4[tbl$target == 1])
-boxplot(tbl$V5[tbl$target == 1])
-
-## Colored correlation plot
-ggpairs(data = tbl, columns = 1:5, mapping = aes(color=target))
-
-marginal.dot.plot(nms$V2, nms$V4, pch = 1, col = "pink")
-
-
-a = descriptive(nms[1:5])
-b = descriptive(ms[1:5])
-
-
-###############################################################################################################
-
+# Probability density function
 pDensity <- function(x, y){
   # Probability density function
   # X = dataset
@@ -291,4 +174,39 @@ pDensity <- function(x, y){
   
 }
 
+##################### Plot section ##############################
 
+
+# Non MS
+boxplot(tbl$V2[tbl$target == 0])
+boxplot(tbl$V3[tbl$target == 0])
+boxplot(tbl$V4[tbl$target == 0])
+boxplot(tbl$V5[tbl$target == 0])
+
+# MS
+
+boxplot(tbl$V2[tbl$target == 1])
+boxplot(tbl$V3[tbl$target == 1])
+boxplot(tbl$V4[tbl$target == 1])
+boxplot(tbl$V5[tbl$target == 1])
+
+# Colored correlation plot
+ggpairs(data = tbl, columns = 1:5, mapping = aes(color=target))
+
+marginal.dot.plot(nms$V2, nms$V4, pch = 1, col = "pink")
+
+# QQ plots for norm and line
+qqnorm(tbl[,1])
+qqline(tbl[,1])
+##QQ2 is not normally distributed 
+qqnorm(tbl[,2])
+qqline(tbl[,2])
+##QQ3 not normally distributed
+qqnorm(tbl[,3])
+qqline(tbl[,3])
+#QQ4 not normal
+qqnorm(tbl[,4])
+qqline(tbl[,4])
+##QQ5 not normal
+qqnorm(tbl[,5])
+qqline(tbl[,5])
