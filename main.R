@@ -149,13 +149,14 @@ tsqared <- function(x,y,f){
   xyvar <- xmean - y
   p1 <- xyvar %*% xcovin
   result <- round(p1%*%(n*xyvar),3)
-  fstat <- qf(f, df1 = ncol(x), df2 = nrow(x)-ncol(x))
+  fstat <- qf(f, df1 = ncol(x), df2 = nrow(x)-ncol(x)) * (((nrow(x)-1)*ncol(x))/(nrow(x) - ncol(x)))
   if(result > fstat){
     print("We REJECT the Null Hypothesis that y is a possible mean vector in x")
   }else{
     print("We ACCEPT the Null Hypothesis and y is a possible mean vector in x")
   }
-  return(c(result, fstat))
+  r_list <- list("Tsquared" = result, "Fstat" = fstat)
+  return(r_list)
 }
 
 
