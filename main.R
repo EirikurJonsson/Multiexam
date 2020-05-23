@@ -158,6 +158,9 @@ tsqared <- function(x,y,f){
   r_list <- list("Tsquared" = result, "Fstat" = fstat)
   return(r_list)
 }
+# Testing if this function works well See page 214 - 215 for the example used
+#meanVector <- c(4,50,10)
+#a <- tsqared(tbl, meanVector, 0.9)
 
 
 # Probability density function
@@ -211,3 +214,9 @@ qqline(tbl[,4])
 ##QQ5 not normal
 qqnorm(tbl[,5])
 qqline(tbl[,5])
+
+qqnorm(ms[,2])
+qqline(ms[,2])
+
+qqnorm(nms[,2])
+qqline(nms[,2])
