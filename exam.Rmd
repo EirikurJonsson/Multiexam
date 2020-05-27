@@ -1,0 +1,218 @@
+---
+title: "Exam in Multivariate Statistics"
+author: "Eirikur Jonsson"
+date: "14/05/2020"
+output: pdf_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+library(st514)
+#library(tidyverse)
+library(ggplot2)
+library(GGally)
+library(corrplot)
+library(ggcorrplot)
+library(MASS)
+library(rcompanion)
+data("T1-6")
+df <- tbl
+# Non-multiple-sclerosis (NMS) group data
+nms <- subset(df, V6 == 0)
+# Multiple-sclerosis (MS) group data
+ms <- subset(df, V6 == 1)
+```
+
+# Co/Variance matrix
+
+```{r}
+coVar <- function(x){
+  v <- cov(x) * (nrow(x) -1) / nrow(x)
+  return(v)
+}
+print("No-Multiple-Sclerosis")
+print(coVar(nms[1:5]))
+print("Multiple-Sclerosis")
+print(coVar(ms[1:5]))
+```
+
+# Pure Variance Matrix
+
+```{r}
+print("Not-Multiple-Sclerosis")
+print(var(nms[1:5]))
+print("Multiple-Sclerosis")
+print(var(ms[1:5]))
+```
+
+# Mean Vectors
+
+```{r}
+print("Not-Multiple-Sclerosis")
+print(colMeans(nms[1:5]))
+print("Multiple-Sclerosis")
+print(colMeans(ms[1:5]))
+```
+
+# Std for each column
+
+```{r}
+msStd <- apply(ms[1:5], 2, sd)
+nmsStd <- apply(nms[1:5], 2, sd)
+print(msStd)
+print(nmsStd)
+
+```
+
+
+# Plotting
+
+
+```{r}
+corMatrix <- cor(ms[1:5])
+p_corMat <- cor_pmat(ms[1:5])
+
+#ggpairs(ms[2:5], progress = FALSE)
+ggpairs(nms[1:5], progress = FALSE)
+```
+```{r}
+corrplot(cor(nms[1:5]), method = "ellipse", main = "Non MS")
+corrplot(cor(ms[1:5]), method  = "ellipse", main = "MS")
+```
+
+```{r}
+pairs(nms[1:5], diag.panel = panel.boxplot, labels = "", main = "Non MS")
+pairs(ms[1:5], diag.panel = panel.boxplot, labels = "", main = "MS")
+```
+
+# Descriptive function
+
+```{r}
+descriptive <- function(x){
+  "
+  This function takes in one input parameter
+  and that is a dataframe or matrix
+  
+  The output of this function will be
+  
+  1. Mean for each column in the dataset
+  2. Covariance matrix
+  3. Co/Variance Matrix
+  4. Variance matrix
+  5. Inverse of the covariance matrix
+  6. Determinant of the covariance matrix
+  "
+  xmean <- colMeans(x)
+  xcov <- cov(x)
+  xcovVar <- cov(x) * (nrow(x) -1) / nrow(x)
+  xvar <- var(x)
+  xcovInv <- solve(xcov)
+  xdet <- det(xcov)
+
+  # Debug block
+  
+  # print("Mean Vector")
+  # print(xmean)
+  # print("-----------------------------------------------------")
+  # print("Covariance")
+  # print(xcov)
+  # print("-----------------------------------------------------")
+  # print("Xco/Variance")
+  # print(xcovVar)
+  # print("-----------------------------------------------------")
+  # print("Variance")
+  # print(xvar)
+  # print("-----------------------------------------------------")
+  # print("Covariance inverse")
+  # print(xcovInv)
+  # print("-----------------------------------------------------")
+  # print("Determinant")
+  # print(xdet)
+  mylist = list("meanVector" = xmean, "Covariance" = xcov, "Co-Variance" = xcovVar, "Variance" = xvar, "CovInverse" = xcovInv, "Determinant" = xdet)
+  return(mylist)
+}
+descriptive(nms[2:5])
+```
+
+
+# Testing multivariate mean vector with $T^2$
+
+What is needed:
+
+- Mean vector
+- Hypo-means
+- Covariance matrix
+- Inverse of covariance matrix
+
+```{r}
+tsqared <- function(x,y,f){
+  n <- nrow(x)
+  xmean <- colMeans(x)
+  xcov <- cov(x)
+  xcovin <- solve(xcov)
+  xyvar <- xmean - y
+  p1 <- xyvar %*% xcovin
+  result <- round(p1%*%(n*xyvar),3)
+  fstat <- qf(f, df1 = ncol(x), df2 = nrow(x)-ncol(x))
+  if(result > fstat){
+    print("We REJECT the Null Hypothesis that y is a possible mean vector in x")
+  }else{
+    print("We ACCEPT the Null Hypothesis and y is a possible mean vector in x")
+  }
+  return(c(result, fstat))
+}
+```
+
+```{r}
+nmsM <- colMeans(nms[1:5])
+msM <- colMeans(ms[1:5])
+print("For the MS dataset using the Non-MS mean-vector")
+print(tsqared(x=ms[1:5], y=nmsM, f=0.9))
+print("For the Non-MS dataset using the MS mean-vector")
+print(tsqared(x = nms[1:5], y = msM, f = 0.9))
+```
+
+# Box-Cox tranformation
+```{r}
+nBoxCox <- function(x){
+box <- boxcox(x ~1, lambda = seq(-20,20,0.1))
+Cox <- data.frame(box$x, box$y)
+Cox2 <- Cox[with(Cox, order(-Cox$box.y)),]
+Cox2[1,]
+lambda = Cox2[1,"box.x"]
+df_box <- (x ^ lambda - 1)/lambda
+plotNormalHistogram(df_box)
+nShapiro <- shapiro.test(df_box)
+nList <- list("Results" = df_box, "Shapiro-Wilk Test" = nShapiro)
+return(nList)
+}
+```
+```{r}
+v2msBox <- nBoxCox(ms$V2)
+v2msBoxTrans <- v2msBox$Results
+v2msBoxTrans <- data.frame(v2msBoxTrans)
+qqnorm(v2msBoxTrans[,1])
+qqline(v2msBoxTrans[,1])
+print(v2msBox$`Shapiro-Wilk Test`)
+```
+```{r}
+v2nmsBox <- nBoxCox(nms$V2)
+v2nmsBoxTrans <- v2nmsBox$Results
+v2nmsBoxTrans <- data.frame(v2nmsBoxTrans)
+qqnorm(v2nmsBoxTrans[,1])
+qqline(v2nmsBoxTrans[,1])
+print(v2nmsBox$`Shapiro-Wilk Test`)
+```
+```{r}
+plot(density(v2msBox$Results))
+plot(density(v2nmsBox$Results))
+?log
+```
+
+
+## Original variables are normally distributed.
+```{r}
+shapiro.test(ms$V2)
+shapiro.test(nms$V2)
+```
+
