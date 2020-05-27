@@ -216,3 +216,4 @@ shapiro.test(ms$V2)
 shapiro.test(nms$V2)
 ```
 
+Hi my name is stupid - I live in a gallery - see my army of statues out there - they scare me and they are creepy
