@@ -217,6 +217,7 @@ shapiro.test(ms$V2)
 shapiro.test(nms$V2)
 ```
 
+<<<<<<< HEAD
 # Principal component analysis and combination
 
 We wanted to see if the variables were measuring the same latent variable so we ran a principal component analysis to see if this was the case. We decided to maximize the factor-loadings onto each factor so we used varimax rotation and since we are hoping that there are only two principal components we then give the principal()function only 2 factors to look for. This function will also tell us if two factor were sufficient.
@@ -384,3 +385,6 @@ print(shapiro.test(nms$transV35))
 
 
 
+=======
+Hi my name is stupid - I live in a gallery - see my army of statues out there - they scare me and they are creepy
+>>>>>>> 773107201b6926479e6f543bb2d0c9131017fe5b
