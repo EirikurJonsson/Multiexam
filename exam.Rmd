@@ -8,7 +8,7 @@ output: pdf_document
 ```{r setup, include=FALSE}
 knitr::opts_chunk$set(echo = TRUE)
 library(st514)
-#library(tidyverse)
+library(tidyverse)
 library(ggplot2)
 library(GGally)
 library(corrplot)
@@ -350,8 +350,15 @@ print(shapiro.test(nms$transV35))
 ```
 
 
+```{r}
+model <- manova(cbind(tbl$transV24, tbl$transV35)~ V6, data = tbl)
+summary(model)
+```
 
 
+```{r}
+
+```
 
 
 
