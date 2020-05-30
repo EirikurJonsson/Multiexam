@@ -383,8 +383,3 @@ print(shapiro.test(nms$transV35))
 
 
 
-
-
-=======
-Hi my name is stupid - I live in a gallery - see my army of statues out there - they scare me and they are creepy
->>>>>>> 773107201b6926479e6f543bb2d0c9131017fe5b
