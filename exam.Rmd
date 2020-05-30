@@ -15,6 +15,7 @@ library(corrplot)
 library(ggcorrplot)
 library(MASS)
 library(rcompanion)
+library(cowplot)
 data("T1-6")
 df <- tbl
 # Non-multiple-sclerosis (NMS) group data
@@ -215,4 +216,171 @@ plot(density(v2nmsBox$Results))
 shapiro.test(ms$V2)
 shapiro.test(nms$V2)
 ```
+
+# Principal component analysis and combination
+
+We wanted to see if the variables were measuring the same latent variable so we ran a principal component analysis to see if this was the case. We decided to maximize the factor-loadings onto each factor so we used varimax rotation and since we are hoping that there are only two principal components we then give the principal()function only 2 factors to look for. This function will also tell us if two factor were sufficient.
+
+```{r}
+df <- tbl[2:5]
+pcamodel <- principal(df, nfactors = 2, rotate = "varimax")
+print(summary(pcamodel))
+print(pcamodel$loadings)
+```
+
+As the PCA model results show V2 and V4 are measuring the same latent variable and that V3 and V5 do the same on a different variable. We will therefor combine these variables into two variables that will allow for a simpler model building and easier to interperate results from our eventual classification. To combine these variables we will use the Euclidian Distance between the two variables. This means the eucliduan distance between V2 - V4 and then V3 - V5. To simplify we construct a function called euclid.
+
+```{r}
+euclid <- function(x,y){
+  "
+  This function calculates the euclidian distance between two variables
+  "
+  dist <- sqrt((x - y)^2)
+  return(dist)
+}
+
+tbl$V24 <- euclid(tbl$V2, tbl$V4)
+tbl$V35 <- euclid(tbl$V3, tbl$V4)
+par(mfrow = c(1,2))
+plot(density(tbl$V24))
+plot(density(tbl$V35))
+  
+```
+
+From those two plots we can see that the variables are not gaussian, but lets look at them individually between the MS and NMS groups.
+
+```{r}
+nms <- subset(tbl, V6 == 0)
+ms <- subset(tbl, V6 == 1)
+
+par(mfrow = c(2,2))
+plot(density(nms$V24))
+plot(density(nms$V35))
+plot(density(ms$V24))
+plot(density(ms$V35))
+```
+
+
+```{r}
+dV24ms <- density(ms$V24)
+dV24nms <- density(nms$V24)
+
+dV35ms <- density(ms$V35)
+dV35nms <- density(nms$V35)
+
+V24msX <- dV24ms$x
+V24msY <- dV24ms$y
+V24nmsX <- dV24nms$x
+V24nmsY <- dV24nms$y
+
+V35msX <- dV35ms$x
+V35msY <- dV35ms$y
+V35nmsX <- dV35nms$x
+V35nmsY <- dV35nms$y
+
+df2 <- data.frame(V24msX, V24msY, V35msX, V35msY)
+df3 <- data.frame(V24nmsX, V24nmsY, V35nmsX, V35nmsY)
+
+ggplot()+
+  geom_line(aes(x = df2$V24msX, y = df2$V24msY), color = "red")+
+  geom_line(aes(x = df3$V24nmsX, y = df3$V24nmsY), color = "pink")+
+  geom_line(aes(x = df2$V35msX, y = df2$V35msY), color = "blue")+
+  geom_line(aes(x = df3$V35nmsX, y = df3$V35nmsY), color = "steelblue")
+
+```
+
+
+```{r}
+model <- manova(cbind(V24,V35) ~ V6, data = tbl)
+summary(model)
+```
+
+
+
+```{r}
+transV24 <- nBoxCox(tbl$V24)
+transV35 <- nBoxCox(tbl$V35)
+shapiro.test(transV24$Results)
+shapiro.test(transV35$Results)
+
+dtransV24 <- density(transV24$Results)
+dtransV35 <- density(transV35$Results)
+
+dtransV24X <- dtransV24$x
+dtransV24Y <- dtransV24$y
+dtransV35X <- dtransV35$x
+dtransV35Y <- dtransV35$y
+
+df4 <- data.frame(dtransV24X, dtransV24Y, dtransV35X, dtransV35Y)
+
+v24plot <- ggplot()+
+  geom_line(aes(x = df4$dtransV24X, y = df4$dtransV24Y))
+v35plot <- ggplot()+
+  geom_line(aes(x = df4$dtransV35X, y = df4$dtransV35Y))
+plot_grid(v24plot, v35plot, labels = "AUTO")
+```
+
+```{r}
+tbl$transV24 <- transV24$Results
+tbl$transV35 <- transV35$Results
+
+nms <- subset(tbl, V6 == 0)
+ms <- subset(tbl, V6 == 1)
+
+par(mfrow = c(2,2))
+plot(density(nms$transV24))
+plot(density(nms$transV35))
+plot(density(ms$transV24))
+plot(density(ms$transV35))
+```
+
+```{r}
+print(shapiro.test(tbl$transV24))
+print("--------------------------")
+print(shapiro.test(tbl$transV35))
+print("--------------------------")
+print(shapiro.test(ms$transV24))
+print("--------------------------")
+print(shapiro.test(ms$transV35))
+print("--------------------------")
+print(shapiro.test(nms$transV24))
+print("--------------------------")
+print(shapiro.test(nms$transV35))
+```
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
