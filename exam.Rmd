@@ -8,7 +8,7 @@ output: pdf_document
 ```{r setup, include=FALSE}
 knitr::opts_chunk$set(echo = TRUE)
 library(st514)
-library(tidyverse)
+#library(tidyverse)
 library(ggplot2)
 library(GGally)
 library(corrplot)
@@ -109,6 +109,7 @@ descriptive <- function(x){
   xvar <- var(x)
   xcovInv <- solve(xcov)
   xdet <- det(xcov)
+  xcor <- cor(x)
 
   # Debug block
   
@@ -129,7 +130,7 @@ descriptive <- function(x){
   # print("-----------------------------------------------------")
   # print("Determinant")
   # print(xdet)
-  mylist = list("meanVector" = xmean, "Covariance" = xcov, "Co-Variance" = xcovVar, "Variance" = xvar, "CovInverse" = xcovInv, "Determinant" = xdet)
+  mylist = list("meanVector" = xmean, "Covariance" = xcov, "Co-Variance" = xcovVar, "Variance" = xvar, "CovInverse" = xcovInv, "Determinant" = xdet, "Correlation-Matrix" = xcor)
   return(mylist)
 }
 descriptive(nms[2:5])
@@ -154,7 +155,7 @@ tsqared <- function(x,y,f){
   xyvar <- xmean - y
   p1 <- xyvar %*% xcovin
   result <- round(p1%*%(n*xyvar),3)
-  fstat <- qf(f, df1 = ncol(x), df2 = nrow(x)-ncol(x))
+  fstat <- 3 * qf(1-f, df1 = ncol(x), df2 = nrow(x)-ncol(x), lower.tail = FALSE)
   if(result > fstat){
     print("We REJECT the Null Hypothesis that y is a possible mean vector in x")
   }else{
@@ -162,6 +163,9 @@ tsqared <- function(x,y,f){
   }
   return(c(result, fstat))
 }
+x <- matrix(c(2, 8, 6, 8, 12, 9, 9, 10), 4, 2)
+y <- c(7,11)
+tsqared(x = x, y = y, f = 0.05)
 ```
 
 ```{r}
@@ -374,10 +378,15 @@ summary(model)
 
 
 
+```{r}
+qt(1 - 0.05 / (2 * p), n - 1)
+```
 
 
 
-
+```{r}
+tsqared(x, y = c(7,11), 0.05)
+```
 
 
 
