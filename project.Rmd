@@ -98,10 +98,23 @@ for(i in c(1:5)){
 scree(tbl[1:5], pc = TRUE, factors = FALSE)
 pca.model <- principal(tbl[1:5], nfactors = 2)
 summary(pca.model)
-a <-as.matrix(pca.model$scores)
-a
+pca.model$loadings
 ```
 
+```{r}
+pc1 <- ((tbl[3]*0.948) + (tbl[5] * 0.934))
+pc2 <- ((tbl[1] * 0.766) + (tbl[2] * 0.783) + (tbl[4] * 0.784))
+
+pc1
+pc2
+plot(pc1$V3, pc2$V1)
+```
+
+```{r}
+df <- data.frame(pc1$V3, pc2$V1, tbl[6])
+colnames(df) <- c("pc1", "pc2", "label")
+df
+```
 
 
 
