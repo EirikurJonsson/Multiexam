@@ -1,0 +1,113 @@
+---
+title: "multiExam"
+author: "Eirikur Jonsson"
+date: "09/06/2020"
+output: pdf_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+library(st514)
+library(tidyverse)
+library(ggplot2)
+library(GGally)
+library(corrplot)
+library(ggcorrplot)
+library(MASS)
+library(rcompanion)
+library(cowplot)
+library(psych)
+source("https://imada.sdu.dk/~chdj/ST514/F20/BoxM.r")
+data("T1-6")
+df <- tbl
+# Non-multiple-sclerosis (NMS) group data
+nms <- subset(df, V6 == 0)
+# Multiple-sclerosis (MS) group data
+ms <- subset(df, V6 == 1)
+```
+
+Add Descriptive function here
+
+# Data Preperation
+
+## Testing for normality with qqplots Mahalanobis SD whole and half/ass
+
+```{r}
+x <- as.matrix(tbl[1:5])
+x.mean <- colMeans(x)
+S <- cov(x)
+n <- nrow(x)
+D2 <- rep(0, n)
+for (i in 1:n) {
+  D2[i] <- t(x[i,] - x.mean) %*% solve(S) %*% (x[i,] - x.mean)
+}
+round(D2, 4)
+which(D2 < qchisq(0.5, 2))
+p <- ncol(x)
+D2 <- mahalanobis(x, colMeans(x), S)
+result <- qqplot(qchisq(ppoints(n, a = 0.5), df = p), D2,
+       ylab = "Mahalanobis distances",
+       xlab = bquote("Quantiles of " ~ chi[.(p)]^2),
+       main = bquote("Q-Q plot of Mahalanobis" * ~ D^2 * 
+                       " vs. quantiles of" * ~ chi[.(p)]^2))
+cor(result$x, result$y)
+```
+
+
+### Add mean for each subset where null
+Need to add for all the columns for all subsets
+```{r echo=TRUE}
+v2meannms <- colMeans(nms[2])
+v3meannms <- colMeans(nms[3])
+v4meannms <- colMeans(nms[4])
+v5meannms <- colMeans(nms[5])
+nms[2][nms[2]==0.0] <- v2meannms
+nms[3][nms[3]==0.0] <- v3meannms
+nms[4][nms[4]==0.0] <- v4meannms
+nms[5][nms[5]==0.0] <- v5meannms
+
+v2meanms <- colMeans(ms[2])
+v3meanms <- colMeans(ms[3])
+v4meanms <- colMeans(ms[4])
+v5meanms <- colMeans(ms[5])
+ms[2][ms[2]==0.0] <- v2meanms
+ms[3][ms[3]==0.0] <- v3meanms
+ms[4][ms[4]==0.0] <- v4meanms
+ms[5][ms[5]==0.0] <- v5meanms
+```
+## Outliers
+
+```{r}
+par(mfrow = c(3,5))
+for (i in c(1:5)){
+  boxplot(tbl[i], xlab = paste("For V", i))
+}
+
+for(i in c(1:5)){
+  boxplot(ms[i], xlab = paste("For MS V", i))
+}
+
+for(i in c(1:5)){
+  boxplot(nms[i], xlab = paste("For NMS V", i))
+}
+```
+
+
+
+```{r}
+scree(tbl[1:5], pc = TRUE, factors = FALSE)
+pca.model <- principal(tbl[1:5], nfactors = 2)
+summary(pca.model)
+a <-as.matrix(pca.model$scores)
+a
+```
+
+
+
+
+
+```{r}
+?boxplot
+```
+
+
