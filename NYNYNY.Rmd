@@ -1,0 +1,144 @@
+---
+title: "haps"
+author: "Yasmin Hawar Abo Bakir Shuan, Eiríkur Jonsson & Camilla Dyhr-Jahns"
+date: "18/5/2020"
+output: html_document
+---
+
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+library(st514)
+library(tidyverse)
+library(ggplot2)
+library(GGally)
+library(corrplot)
+library(ggcorrplot)
+library(ggpubr)
+library(lattice)
+data("T1-6")
+df <- tbl
+# Non-multiple-sclerosis (NMS) group data
+nms <- subset(df, V6 == 0)
+# Multiple-sclerosis (MS) group data
+ms <- subset(df, V6 == 1)
+```
+
+```{r}
+colnames(tbl) <- c("Age", "V2", "V3", "V4", "V5","target")
+tbl$target <- as.factor(tbl$target)
+```
+
+Data related to responses to visual stimuli were used to develop a rule for seperating people suffering from a multiple-sclerosis-caused visual pathology from those not suffering from the disease.
+
+We were unable to find a data description, so we assume that this dataset is measuring response time in milliseconds between the two samples, where V2 is a measurement for stimulus 1 in milliseconds and V3 is the difference in respeonse time for each eye. This is also the case for V4 and V5, respectively and V6 our label (0 for Non-MS and 1 for MS).
+
+# DESCRIPTIVE STATISTICS
+
+
+```{r include=FALSE}
+descriptive <- function(x){
+  xmean <- colMeans(x)
+  xcov <- cov(x)
+  xcovVar <- cov(x) * (nrow(x) -1) / nrow(x)
+  xvar <- var(x)
+  xcovInv <- solve(xcov)
+  xdet <- det(xcov)
+
+  # Debug block
+  
+  # print("Mean Vector")
+  # print(xmean)
+  # print("-----------------------------------------------------")
+  # print("Covariance")
+  # print(xcov)
+  # print("-----------------------------------------------------")
+  # print("Xco/Variance")
+  # print(xcovVar)
+  # print("-----------------------------------------------------")
+  # print("Variance")
+  # print(xvar)
+  # print("-----------------------------------------------------")
+  # print("Covariance inverse")
+  # print(xcovInv)
+  # print("-----------------------------------------------------")
+  # print("Determinant")
+  # print(xdet)
+  mylist = list("meanVector" = xmean, "Covariance" = xcov, "Co-Variance" = xcovVar, "Variance" = xvar, "CovInverse" = xcovInv, "Determinant" = xdet)
+  return(mylist)
+  
+}
+```
+
+## FOR NMS GROUP
+The mean age for the NMS group is lower than for the MS group.
+The responses to stimuli 1 and 2 are faster in the NMS group compared to the MS group.
+Finally, the differences between L and R are significantly higher in the MS group compared to the NMS group.
+
+### COVARIANCE
+V2 and V4
+The covariance for the NMS sample is 106.78 whereas for the MS sample it is 912.41, which indicates a slower responsetime in the MS group. 
+
+V3 and V5
+When calculating the difference in respeonse time for each eye, the NMS group has differnce of 0.50. The MS group has a difference of 297.31 which again indicates a high difference between the two groups.
+
+### VARIANCE-COVARIANCE
+
+A variance-covariance matrix is a square matrix that contains the variances and covariances associated with several variables. The diagonal elements of the matrix contain the variances of the variables and the off-diagonal elements contain the covariances between all possible pairs of variables.
+The variance-covariances associated with variables V2 and V4 for the NMS group is 105.23. 
+MS
+880.95234
+
+V3 and V5
+NMS
+0.4940979
+MS
+287.06683
+
+### VARIANCE
+Variance tells us how much a quantity varies w.r.t. its mean. Its the spread of data around the mean value. You only know the magnitude here, as in how much the data is spread.
+V2 and V4
+NMS
+106.785030
+MS 
+V3 and V5
+
+
+```{r}
+descriptive(nms[1:5])
+```
+```{r}
+descriptive(ms[1:5])
+```
+```{r}
+print(var(ms[1:5]))
+print(cov(ms[1:5]))
+```
+
+```{r}
+Normal_Distributed <- hist(nms$V2+nms$V4)
+
+# The varibles, V2 and V4 from the Non-MS group has the highest correlation. The plot below shows that they are normally distributed.
+```
+
+
+```{r}
+library(devtools)
+install_version('MVN', '4.0.2')
+```
+
+
+```{r}
+qqnorm(nms[, 2])
+qqline(nms[, 2])
+```
+
+
+```{r}
+# (Note: we have plottet all the variables, V2 and V4, and V3 and V5, from both groups and only the V2 and V4 from the Non-MS group have normally distributed data and therefore the only one shown).
+```
+
+
+
+
+

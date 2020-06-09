@@ -24,6 +24,16 @@ nms <- subset(df, V6 == 0)
 ms <- subset(df, V6 == 1)
 ```
 
+```{r}
+v3mean <- colMeans(nms[3])
+nms[3][nms[3]==0.0] <- v3mean
+
+```
+```{r}
+v3mean
+nms[3]
+```
+
 # Co/Variance matrix
 
 ```{r}
