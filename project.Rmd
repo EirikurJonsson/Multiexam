@@ -17,6 +17,8 @@ library(MASS)
 library(rcompanion)
 library(cowplot)
 library(psych)
+library(boot)
+library(caret)
 source("https://imada.sdu.dk/~chdj/ST514/F20/BoxM.r")
 data("T1-6")
 df <- tbl
@@ -76,7 +78,7 @@ ms[4][ms[4]==0.0] <- v4meanms
 ms[5][ms[5]==0.0] <- v5meanms
 ```
 ## Outliers
-
+Using boxplots to see if there are outliers
 ```{r}
 par(mfrow = c(3,5))
 for (i in c(1:5)){
@@ -92,18 +94,24 @@ for(i in c(1:5)){
 }
 ```
 
-
+Function to standardize the values of each column
 
 ```{r}
-scree(tbl[1:5], pc = TRUE, factors = FALSE)
-pca.model <- principal(tbl[1:5], nfactors = 2)
+df <- tbl
+df[1:5] <- scale(df[1:5])
+df
+```
+
+```{r}
+scree(df[1:5], pc = TRUE, factors = FALSE)
+pca.model <- principal(df[1:5], nfactors = 2)
 summary(pca.model)
 pca.model$loadings
 ```
 
 ```{r}
-pc1 <- ((tbl[3]*0.948) + (tbl[5] * 0.934))
-pc2 <- ((tbl[1] * 0.766) + (tbl[2] * 0.783) + (tbl[4] * 0.784))
+pc1 <- ((df[3]*0.948) + (df[5] * 0.934))
+pc2 <- ((df[1] * 0.766) + (df[2] * 0.783) + (df[4] * 0.784))
 
 pc1
 pc2
@@ -111,16 +119,19 @@ plot(pc1$V3, pc2$V1)
 ```
 
 ```{r}
-df <- data.frame(pc1$V3, pc2$V1, tbl[6])
-colnames(df) <- c("pc1", "pc2", "label")
-df
+df_log <- data.frame(pc1$V3, pc2$V1, tbl[6])
+colnames(df_log) <- c("pc1", "pc2", "label")
+df_log$label <- as.factor(df_log$label)
 ```
-
-
-
 
 ```{r}
-?boxplot
+train <- createDataPartition(df_log$label, p = 0.6, list = FALSE)
+training <- df_log[train,]
+testing <- df_log[-train,]
+
+model_log <- train(label~., data = training, method = "glm", family = "binomial")
+model_log
+
+pred <- predict(model_log, newdata = testing)
+caret::confusionMatrix(data = pred, testing$label)
 ```
-
-
