@@ -80,26 +80,29 @@ ms[5][ms[5]==0.0] <- v5meanms
 ## Outliers
 Using boxplots to see if there are outliers
 ```{r}
-par(mfrow = c(3,5))
-for (i in c(1:5)){
-  boxplot(tbl[i], xlab = paste("For V", i))
-}
+df <- tbl
+colnames(df) <- c(paste("x", 1:5, sep=""), "d2")
+dfz <- round(scale(df[1:5]), 1)
+colnames(dfz) <- c(paste("z", 1:5, sep = ""))
+outliers <- cbind(df[,1:5], 1:98, dfz, tbl[,5])
+colnames(outliers)[c(6,12)] <- c("Obs", "d2")
+max(outliers$d2)
+which(outliers$d2 == max(outliers$d2))
 
-for(i in c(1:5)){
-  boxplot(ms[i], xlab = paste("For MS V", i))
-}
+#This function calculates the critical value
+chi_crit_val <- qchisq(0.005, 5, lower.tail = F)
+chi_crit_val
 
-for(i in c(1:5)){
-  boxplot(nms[i], xlab = paste("For NMS V", i))
-}
+#This function prints out the outliers by observation number in relation to the treshold of 16.74
+out <- which(outliers$d2 > chi_crit_val)
+which(outliers$d2 > 16.74)
+df <- df[-out,]
 ```
 
 Function to standardize the values of each column
 
 ```{r}
-df <- tbl
-df[1:5] <- scale(df[1:5])
-df
+outliers
 ```
 
 ```{r}
@@ -110,16 +113,13 @@ pca.model$loadings
 ```
 
 ```{r}
-pc1 <- ((df[3]*0.948) + (df[5] * 0.934))
-pc2 <- ((df[1] * 0.766) + (df[2] * 0.783) + (df[4] * 0.784))
-
-pc1
-pc2
-plot(pc1$V3, pc2$V1)
+pc2 <- ((df[3]*0.833) + (df[5] * 0.854))
+pc1 <- ((df[1] * 0.756) + (df[2] * 0.798) + (df[4] * 0.777))
+plot(pc1$x1, pc2$x3)
 ```
 
 ```{r}
-df_log <- data.frame(pc1$V3, pc2$V1, tbl[6])
+df_log <- data.frame(pc1$x1, pc2$x3, df[6])
 colnames(df_log) <- c("pc1", "pc2", "label")
 df_log$label <- as.factor(df_log$label)
 ```
@@ -135,3 +135,36 @@ model_log
 pred <- predict(model_log, newdata = testing)
 caret::confusionMatrix(data = pred, testing$label)
 ```
+
+```{r}
+two.group.quadratic.classification <- function(data, grouping, newdata) {
+  dat.split <- split(data, grouping)
+  g1 <- as.data.frame(dat.split[1])
+  g2 <- as.data.frame(dat.split[2])
+  g1.means <- apply(g1, 2, mean)
+  g2.means <- apply(g2, 2, mean)
+  g1.covar <- cov(g1)
+  g2.covar <- cov(g2)
+  
+  prediction <- apply(newdata, 1, function(y) {
+    d2.y1 <- (y - g1.means) %*% solve(g1.covar) %*% (y - g1.means)
+    d2.y2 <- (y - g2.means) %*% solve(g2.covar) %*% (y - g2.means)
+    ifelse(d2.y1^2 > d2.y2^2, 2, 1)
+  })
+  
+  class.table <- table(grouping, prediction, dnn = c('Actual Group','Predicted Group'))
+  pred.errors <- sum(diag(t(apply(class.table, 2, rev)))) / dim(data)[1]
+  results <- list('Prediction'=prediction, 'Table of Predictions'=class.table, 'Error Rate'=pred.errors)
+  
+  return(results)
+}
+
+tbl.perf <- two.group.quadratic.classification(df[,1:5], df[,6], df[,1:5])
+tbl.perf
+tbl.perf <- two.group.quadratic.classification(tbl[,2:4], tbl[,6], tbl[,2:4])
+tbl.perf
+
+tbl.perf <- two.group.quadratic.classification(tbl[,2:5], tbl[,6], tbl[,2:5])
+tbl.perf
+```
+
