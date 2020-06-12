@@ -43,8 +43,8 @@ D2 <- rep(0, n)
 for (i in 1:n) {
   D2[i] <- t(x[i,] - x.mean) %*% solve(S) %*% (x[i,] - x.mean)
 }
-round(D2, 4)
-which(D2 < qchisq(0.5, 2))
+#round(D2, 4)
+#which(D2 < qchisq(0.5, 2))
 p <- ncol(x)
 D2 <- mahalanobis(x, colMeans(x), S)
 result <- qqplot(qchisq(ppoints(n, a = 0.5), df = p), D2,
@@ -56,27 +56,52 @@ cor(result$x, result$y)
 ```
 
 
-### Add mean for each subset where null
-Need to add for all the columns for all subsets
-```{r echo=TRUE}
-v2meannms <- colMeans(nms[2])
-v3meannms <- colMeans(nms[3])
-v4meannms <- colMeans(nms[4])
-v5meannms <- colMeans(nms[5])
-nms[2][nms[2]==0.0] <- v2meannms
-nms[3][nms[3]==0.0] <- v3meannms
-nms[4][nms[4]==0.0] <- v4meannms
-nms[5][nms[5]==0.0] <- v5meannms
+### Are the subsets means possible mean vectors in each.
 
-v2meanms <- colMeans(ms[2])
-v3meanms <- colMeans(ms[3])
-v4meanms <- colMeans(ms[4])
-v5meanms <- colMeans(ms[5])
-ms[2][ms[2]==0.0] <- v2meanms
-ms[3][ms[3]==0.0] <- v3meanms
-ms[4][ms[4]==0.0] <- v4meanms
-ms[5][ms[5]==0.0] <- v5meanms
+Using Hotellings $T^2$
+
+Here we test these hypotheses:
+
+$$
+h_0:\mu(MS) = \mu(NMS) \\
+h_1: \mu(MS) \ne \mu(NMS)
+$$
+
+$$
+h_0: \mu(NMS) = \mu(MS) \\
+h_1: \mu(NMS) \ne \mu(MS)
+$$
+
+```{r}
+msMatrix <- as.matrix(ms[1:5])
+nmsMatrix <- as.matrix(nms[1:5])
+msMeans <- colMeans(msMatrix)
+nmsMeans <- colMeans(nmsMatrix)
+msN <- nrow(msMatrix)
+nmsN <- nrow(nmsMatrix)
+msP <- ncol(msMatrix)
+nmsP <- ncol(nmsMatrix)
+msCov <- cov(msMatrix)
+nmsCov <- cov(nmsMatrix)
+
+
+# Start -  are ms mu possible mean vectors in nms
+msInNms <- t(nmsMeans - msMeans)%*%solve(nmsCov)%*%(nmsMeans - msMeans)
+msInNmsT2 <- round(nmsN * msInNms, 3)
+msInNmsFval <- msInNmsT2 * (nmsN - nmsP)/((nmsN - 1)*nmsP)
+msInNmsFvalP <- pf(msInNmsFval, nmsP, nmsN - nmsP, lower.tail = FALSE)
+# Now we do the reverse
+nmsInMs <- t(msMeans - nmsMeans)%*%solve(msCov)%*%(msMeans - nmsMeans)
+nmsInMsT2 <- round(msN * nmsInMs, 3)
+nmsInMsFval <- nmsInMsT2 * (msN - msP) / ((msN - 1) * msP)
+nmsInMsFvalP <- pf(nmsInMsFval, msP, msN - msP, lower.tail = FALSE)
+
+print(paste("Nms in MS ", msInNmsT2, "With p value ", msInNmsFvalP))
+print(paste("MS in NMS ", nmsInMsT2, "with a p value ", nmsInMsFvalP))
 ```
+
+From these we can see that we can reject the null hypotheses in both instances that the means from each subset is a possible mean vector in the other.
+
 ## Outliers
 Using boxplots to see if there are outliers
 ```{r}
@@ -110,6 +135,27 @@ scree(df[1:5], pc = TRUE, factors = FALSE)
 pca.model <- principal(df[1:5], nfactors = 2)
 summary(pca.model)
 pca.model$loadings
+```
+```{r}
+pca <- prcomp(~ x1 + x2 + x3 + x4 + x5, data = df, scale = TRUE)
+
+(loadings <- pca$rotation)
+
+axes <- predict(pca, newdata = df)
+print(head(axes, 4))
+```
+```{r}
+dat <- cbind(df, axes)
+dat$d2 <- as.factor(dat$d2)
+train <- createDataPartition(dat$d2, p = 0.6, list = FALSE)
+training <- dat[train,]
+testing <- dat[-train,]
+
+model_log <- train(d2~ PC1 + PC2, data = training, method = "glm", family = "binomial")
+model_log
+
+pred <- predict(model_log, newdata = testing)
+caret::confusionMatrix(data = pred, testing$d2)
 ```
 
 ```{r}
@@ -167,4 +213,4 @@ tbl.perf
 tbl.perf <- two.group.quadratic.classification(tbl[,2:5], tbl[,6], tbl[,2:5])
 tbl.perf
 ```
-
+      
