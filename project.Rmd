@@ -21,6 +21,7 @@ library(boot)
 library(caret)
 library(DescTools)
 source("https://imada.sdu.dk/~chdj/ST514/F20/BoxM.r")
+set.seed(123)
 data("T1-6")
 df <- tbl
 # Non-multiple-sclerosis (NMS) group data
@@ -147,7 +148,9 @@ loadings <- pca$rotation
 axes <- predict(pca, newdata = df)
 ```
 ```{r}
+# Using Caret to get the logistic regression model
 dat <- cbind(df, axes)
+dat <- as.data.frame(dat)
 dat$d2 <- as.factor(dat$d2)
 train <- createDataPartition(dat$d2, p = 0.6, list = FALSE)
 training <- dat[train,]
@@ -162,14 +165,26 @@ caret::confusionMatrix(data = pred, testing$d2)
 
 
 ```{r}
-qda_model <- qda(d2~PC1+PC2,data = dat2, CV = TRUE)
-a <- table(dat2$d2, qda_model$class)
+# Using MASS package to get qda results
+dat3 <- dat2
+dat3$d2 <- as.numeric(dat3$d2)
+train <- createDataPartition(dat3$d2, p = 0.6, list = FALSE)
+training <- dat3[train,]
+testing <- dat3[-train,]
+qda_model <- qda(d2~PC1+PC2 ,data = training, CV = T)
+a <- table(training$d2, qda_model$class)
 print("Confusion Matrix")
 print(a)
-print(paste("Accuracy: ", sum(diag(a))/nrow(dat2)))
+print(paste("Accuracy: ", sum(diag(a))/nrow(training)))
 ```
-
-
 ```{r}
-BoxM(dat[1:5], dat[6], Ftest = FALSE)
+qda_model2 <- qda(d2 ~ PC1 + PC2, data = training)
+qda.predict <- predict(qda_model2, testing)
+testing$qda <- qda.predict$class
+confQda <- table(testing$qda, testing$d2)
+
+print("Confusion Matrix")
+print(confQda)
+print(paste("Accuracy: ", sum(diag(confQda))/nrow(testing)))
 ```
+
