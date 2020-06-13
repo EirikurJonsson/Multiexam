@@ -129,16 +129,18 @@ df1 <- cbind(df1, tbl$V6)
 Function to standardize the values of each column
 
 ```{r}
-outliers
+colnames(df1)[6] <- c("V6")
+head(df1)
 ```
 
 ```{r}
-scree(df[1:5], pc = TRUE, factors = FALSE)
-pca.model <- principal(df[1:5], nfactors = 2)
+scree(df1[,1:5], pc = TRUE, factors = FALSE)
+pca.model <- principal(df1[,1:5], nfactors = 2)
 summary(pca.model)
 pca.model$loadings
 ```
 ```{r}
+df <- as.data.frame(df1)
 colnames(df) <- c("x1", "x2","x3", "x4", "x5", "d2")
 pca <- prcomp(~ x1 + x2 + x3 + x4 + x5, data = df, scale = TRUE)
 
@@ -203,17 +205,21 @@ two.group.quadratic.classification <- function(data, grouping, newdata) {
   
   class.table <- table(grouping, prediction, dnn = c('Actual Group','Predicted Group'))
   pred.errors <- sum(diag(t(apply(class.table, 2, rev)))) / dim(data)[1]
-  results <- list('Prediction'=prediction, 'Table of Predictions'=class.table, 'Error Rate'=pred.errors)
+  results <- list('Prediction'=prediction, 'Table of Predictions'=class.table, 'Accuracy'=1 - pred.errors)
   
   return(results)
 }
+df1 <- as.data.frame(df1)
+tbl.perf <- two.group.quadratic.classification(df1[,1:5], df1[,6], df1[,1:5])
+tbl.perf
+```
 
-tbl.perf <- two.group.quadratic.classification(df[,1:5], df[,6], df[,1:5])
-tbl.perf
-tbl.perf <- two.group.quadratic.classification(tbl[,2:4], tbl[,6], tbl[,2:4])
-tbl.perf
+```{r}
+dim(df1)
+```
 
-tbl.perf <- two.group.quadratic.classification(tbl[,2:5], tbl[,6], tbl[,2:5])
-tbl.perf
+
+```{r}
+BoxM(dat[1:5], dat[6], Ftest = FALSE)
 ```
       
