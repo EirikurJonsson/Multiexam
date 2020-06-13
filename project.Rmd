@@ -134,20 +134,13 @@ head(df1)
 ```
 
 ```{r}
-scree(df1[,1:5], pc = TRUE, factors = FALSE)
-pca.model <- principal(df1[,1:5], nfactors = 2)
-summary(pca.model)
-pca.model$loadings
-```
-```{r}
 df <- as.data.frame(df1)
 colnames(df) <- c("x1", "x2","x3", "x4", "x5", "d2")
 pca <- prcomp(~ x1 + x2 + x3 + x4 + x5, data = df, scale = TRUE)
 
-(loadings <- pca$rotation)
+loadings <- pca$rotation
 
 axes <- predict(pca, newdata = df)
-print(head(axes, 4))
 ```
 ```{r}
 dat <- cbind(df, axes)
@@ -163,63 +156,16 @@ pred <- predict(model_log, newdata = testing)
 caret::confusionMatrix(data = pred, testing$d2)
 ```
 
-```{r}
-pc2 <- ((df[3]*0.833) + (df[5] * 0.854))
-pc1 <- ((df[1] * 0.756) + (df[2] * 0.798) + (df[4] * 0.777))
-plot(pc1$x1, pc2$x3)
-```
 
 ```{r}
-df_log <- data.frame(pc1$x1, pc2$x3, df[6])
-colnames(df_log) <- c("pc1", "pc2", "label")
-df_log$label <- as.factor(df_log$label)
-```
-
-```{r}
-train <- createDataPartition(df_log$label, p = 0.6, list = FALSE)
-training <- df_log[train,]
-testing <- df_log[-train,]
-
-model_log <- train(label~., data = training, method = "glm", family = "binomial")
-model_log
-
-pred <- predict(model_log, newdata = testing)
-caret::confusionMatrix(data = pred, testing$label)
-```
-
-```{r}
-two.group.quadratic.classification <- function(data, grouping, newdata) {
-  dat.split <- split(data, grouping)
-  g1 <- as.data.frame(dat.split[1])
-  g2 <- as.data.frame(dat.split[2])
-  g1.means <- apply(g1, 2, mean)
-  g2.means <- apply(g2, 2, mean)
-  g1.covar <- cov(g1)
-  g2.covar <- cov(g2)
-  
-  prediction <- apply(newdata, 1, function(y) {
-    d2.y1 <- (y - g1.means) %*% solve(g1.covar) %*% (y - g1.means)
-    d2.y2 <- (y - g2.means) %*% solve(g2.covar) %*% (y - g2.means)
-    ifelse(d2.y1^2 > d2.y2^2, 2, 1)
-  })
-  
-  class.table <- table(grouping, prediction, dnn = c('Actual Group','Predicted Group'))
-  pred.errors <- sum(diag(t(apply(class.table, 2, rev)))) / dim(data)[1]
-  results <- list('Prediction'=prediction, 'Table of Predictions'=class.table, 'Accuracy'=1 - pred.errors)
-  
-  return(results)
-}
-df1 <- as.data.frame(df1)
-tbl.perf <- two.group.quadratic.classification(df1[,1:5], df1[,6], df1[,1:5])
-tbl.perf
-```
-
-```{r}
-dim(df1)
+qda_model <- qda(d2~PC1+PC2,data = dat2, CV = TRUE)
+a <- table(dat2$d2, qda_model$class)
+print("Confusion Matrix")
+print(a)
+print(paste("Accuracy: ", sum(diag(a))/nrow(dat2)))
 ```
 
 
 ```{r}
 BoxM(dat[1:5], dat[6], Ftest = FALSE)
 ```
-      
