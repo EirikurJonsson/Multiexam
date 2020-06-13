@@ -173,9 +173,3 @@ print(paste("Accuracy: ", sum(diag(a))/nrow(dat2)))
 ```{r}
 BoxM(dat[1:5], dat[6], Ftest = FALSE)
 ```
-
-```{r}
-library(DescTools)
-HotellingsT2Test(cbind(tbl$V1, tbl$V2, tbl$V3, tbl$V4, tbl$V5) ~ tbl$V6, test = "chi")
-```
-
