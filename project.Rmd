@@ -19,6 +19,7 @@ library(cowplot)
 library(psych)
 library(boot)
 library(caret)
+library(DescTools)
 source("https://imada.sdu.dk/~chdj/ST514/F20/BoxM.r")
 data("T1-6")
 df <- tbl
@@ -98,6 +99,8 @@ nmsInMsFvalP <- pf(nmsInMsFval, msP, msN - msP, lower.tail = FALSE)
 
 print(paste("Nms in MS ", msInNmsT2, "With p value ", msInNmsFvalP))
 print(paste("MS in NMS ", nmsInMsT2, "with a p value ", nmsInMsFvalP))
+
+print(HotellingsT2Test(cbind(tbl$V1, tbl$V2, tbl$V3, tbl$V4, tbl$V5) ~ tbl$V6, test = "chi"))
 ```
 
 From these we can see that we can reject the null hypotheses in both instances that the means from each subset is a possible mean vector in the other.
@@ -134,6 +137,7 @@ head(df1)
 ```
 
 ```{r}
+scree(df, pc = TRUE, fa = FALSE)
 df <- as.data.frame(df1)
 colnames(df) <- c("x1", "x2","x3", "x4", "x5", "d2")
 pca <- prcomp(~ x1 + x2 + x3 + x4 + x5, data = df, scale = TRUE)
@@ -169,3 +173,9 @@ print(paste("Accuracy: ", sum(diag(a))/nrow(dat2)))
 ```{r}
 BoxM(dat[1:5], dat[6], Ftest = FALSE)
 ```
+
+```{r}
+library(DescTools)
+HotellingsT2Test(cbind(tbl$V1, tbl$V2, tbl$V3, tbl$V4, tbl$V5) ~ tbl$V6, test = "chi")
+```
+
