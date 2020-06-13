@@ -121,7 +121,9 @@ chi_crit_val
 #This function prints out the outliers by observation number in relation to the treshold of 16.74
 out <- which(outliers$d2 > chi_crit_val)
 which(outliers$d2 > 16.74)
-df <- df[-out,]
+df <- tbl[-out,]
+df1 <- scale(tbl[1:5])
+df1 <- cbind(df1, tbl$V6)
 ```
 
 Function to standardize the values of each column
@@ -137,6 +139,7 @@ summary(pca.model)
 pca.model$loadings
 ```
 ```{r}
+colnames(df) <- c("x1", "x2","x3", "x4", "x5", "d2")
 pca <- prcomp(~ x1 + x2 + x3 + x4 + x5, data = df, scale = TRUE)
 
 (loadings <- pca$rotation)
