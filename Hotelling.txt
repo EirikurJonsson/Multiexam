@@ -1,0 +1,1 @@
+Hotellingnn	Hotelling's two sample T2-testnndata:  cbind(tbl$V1, tbl$V2, tbl$V3, tbl$V4, tbl$V5) by tbl$V6nT.2 = 19.933, df1 = 5, df2 = 92, p-value = 2.051e-13 alternative hypothesis: true location difference is not equal to c(0,0,0,0,0)
