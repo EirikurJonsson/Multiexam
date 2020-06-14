@@ -13,6 +13,7 @@ library(ggplot2)
 library(GGally)
 library(corrplot)
 library(ggcorrplot)
+library(ICSNP)
 library(MASS)
 library(rcompanion)
 library(cowplot)
@@ -101,7 +102,7 @@ nmsInMsFvalP <- pf(nmsInMsFval, msP, msN - msP, lower.tail = FALSE)
 print(paste("Nms in MS ", msInNmsT2, "With p value ", msInNmsFvalP))
 print(paste("MS in NMS ", nmsInMsT2, "with a p value ", nmsInMsFvalP))
 
-print(HotellingsT2Test(cbind(tbl$V1, tbl$V2, tbl$V3, tbl$V4, tbl$V5) ~ tbl$V6, test = "chi"))
+print(HotellingsT2(cbind(tbl$V1,tbl$V2,tbl$V3,tbl$V4,tbl$V5) ~ tbl$V6, test = "f"))
 ```
 
 From these we can see that we can reject the null hypotheses in both instances that the means from each subset is a possible mean vector in the other.
@@ -186,5 +187,26 @@ confQda <- table(testing$qda, testing$d2)
 print("Confusion Matrix")
 print(confQda)
 print(paste("Accuracy: ", sum(diag(confQda))/nrow(testing)))
+```
+
+```{r}
+library(ICSNP)
+data(pulmonary)
+
+HotellingsT2(pulmonary) 
+HotellingsT2(pulmonary, mu = c(0,0,2), test = "chi")
+
+# two sample test:
+
+set.seed(123456)
+X <- rmvnorm(20, c(0, 0, 0, 0), diag(1:4))
+Y <- rmvnorm(30, c(0.5, 0.5, 0.5, 0.5), diag(1:4))
+Z <- rbind(X, Y)
+g <- factor(rep(c(1,2),c(20,30)))
+
+HotellingsT2(X, Y)
+HotellingsT2(Z ~ g, test = "chi")
+g
+rm(.Random.seed) 
 ```
 
