@@ -107,6 +107,13 @@ print(HotellingsT2(cbind(tbl$V1,tbl$V2,tbl$V3,tbl$V4,tbl$V5) ~ tbl$V6, test = "f
 
 From these we can see that we can reject the null hypotheses in both instances that the means from each subset is a possible mean vector in the other.
 
+### BoxM test for covariance matrix
+
+```{r}
+BoxM(tbl[1:5], tbl[6])
+```
+
+
 ## Outliers
 Using boxplots to see if there are outliers
 ```{r}
